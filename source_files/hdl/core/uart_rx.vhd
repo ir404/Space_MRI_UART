@@ -1,17 +1,24 @@
---------------------------------------------------------------------------------
--- File Name    : uart_rx.vhd
--- Author       : Imran
--- Description  : Universal Asynchronous Receiver-Transmitter (UART) Receiver 
---                with Auto-Baud Detection for space applications.
---                
---                The module utilises a Finite State Machine (FSM) to manage 
---                transmission states and handles internal logic using variables 
---                to prevent signal scheduling delays.
+----------------------------------------------------------------------------------
+-- Module Name:     uart_rx
+-- Author:          Imran
+-- Last Modified:   11 August 2026
 --
--- Parameters   : DATA_WIDTH - Payload width in bits (default: 8)
+-- Description: A UART Receiver module with Auto-Baud Detection. It uses a FSM
+--              for state management and a 2-stage synchroniser with
+--              glitch filtering to sample the incoming serial data stream.
 --
--- Dependencies : IEEE.STD_LOGIC_1164, IEEE.NUMERIC_STD
---------------------------------------------------------------------------------
+-- Generics:
+--   DATA_WIDTH  : Width of the data payload in bits (default is 8).
+--
+-- Ports:
+--   clk         : System clock input.
+--   rst_n       : Asynchronous active-low reset for fault recovery.
+--   uart_rx_bit : Serial input data line.
+--   data        : Parallel output of the fully received data payload.
+--   data_valid  : Pulses HIGH for one clock cycle when the output data is valid.
+--   frame_err   : HIGH if a framing error occurs (i.e., missing stop bit).
+--   baud_err    : HIGH if the auto-baud measurement times out.
+----------------------------------------------------------------------------------
 
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;

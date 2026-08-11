@@ -1,3 +1,27 @@
+----------------------------------------------------------------------------------
+-- Module Name:     uart_tx
+-- Author:          Imran
+-- Last Modified:   11 August 2026
+--
+-- Description: A customisable UART transmitter module. It takes parallel data 
+--              and transmits it serially based on a configurable baud rate and 
+--              system clock frequency. The transmission frame format consists of:
+--              1 Start bit ('0') + Data bits + 1 Stop bit ('1').
+--
+-- Generics:
+--   CLK_FREQ   : System clock frequency in Hz.
+--   BAUD_RATE  : Target transmission baud rate in bps.
+--   DATA_WIDTH : Width of the data payload in bits (usually 8 bits).
+--
+-- Ports:
+--   clk        : System clock input.
+--   rst_n      : Asynchronous active-low reset.
+--   data       : Parallel data payload to transmit.
+--   tx_en      : Transmission enable; drive HIGH to start sending.
+--   tx_rdy     : Ready flag; HIGH when the module is idle and ready for new data.
+--   tx_bit     : Serial data output line.
+----------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;

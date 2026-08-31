@@ -1,11 +1,22 @@
---------------------------------------------------------------------------------
--- File Name    : autobaud_estimator.vhd
--- Author       : Imran
--- Description  : Minimum-pulse auto-baud estimator for UART. 
---                Listens for the shortest incoming pulse to calculate the baud
---                period and drops the lock if a framing error is detected.
---                Requires the sync byte 0b01010101 for initialisation.
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- Module Name:     autobaud_estimator
+-- Author:          Imran
+-- Last Modified:   1 September 2026
+--
+-- Description: A minimum-pulse auto-baud estimator for UART communication. It 
+--              monitors the serial line for the shortest incoming pulse (using 
+--              the 0x55 sync byte) to dynamically calculate the baud period. 
+--              It includes timeout protection and self-healing error recovery,
+--              dropping the lock to force recalibration if an error is detected.
+--
+-- Ports:
+--   clk          : System clock input.
+--   rst_n        : Asynchronous active-low reset.
+--   uart_rx_bit  : Serial data input line.
+--   frame_err_in : Error trigger from UART RX; drops lock to force recalibration.
+--   baud_period  : Calculated baud period (in clock cycles) sent to the receiver.
+--   baud_locked  : Lock flag; HIGH when a valid baud period is found and saved.
+----------------------------------------------------------------------------------
 
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;

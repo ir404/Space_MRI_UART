@@ -1,10 +1,29 @@
---------------------------------------------------------------------------------
--- File Name    : uart_rx.vhd
--- Author       : Imran
--- Description  : Standard UART Receiver using external baud period.
---                Waits for the baud estimator to lock, then dynamically tracks
---                the baud period to securely receive payload data.
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- Module Name:     uart_rx
+-- Author:          Imran
+-- Last Modified:   1 September 2026
+--
+-- Description: A customisable UART receiver module. It takes serial data and 
+--              converts it to a parallel payload using a dynamically calculated 
+--              baud period. It includes bus-idle gatekeeping (waiting 1.5 baud 
+--              periods) to safely ignore the 0x55 sync byte.
+--              Configuration: 8N2 Compatible
+--              The expected frame format consists of:
+--                  1 Start bit ('0') + Data bits + Stop bit validation ('1').
+--
+-- Generics:
+--   DATA_WIDTH  : Width of the received data payload in bits (usually 8 bits).
+--
+-- Ports:
+--   clk         : System clock input.
+--   rst_n       : Asynchronous active-low reset.
+--   uart_rx_bit : Serial data input line.
+--   baud_period : Dynamic baud period (in clock cycles) from the estimator.
+--   baud_locked : Lock flag; gates the receiver to ignore the 0x55 sync byte.
+--   data        : Parallel data payload received.
+--   data_valid  : Valid flag; HIGH when a full, error-free frame is received.
+--   frame_err   : Error flag; HIGH if the expected stop bit is missing.
+----------------------------------------------------------------------------------
 
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
@@ -83,9 +102,9 @@ BEGIN
                     -- Wait until estimator is locked AND the bus has returned to a HIGH state
                     IF baud_locked = '1' THEN
                         IF rx_sync2_s = STOP_BIT THEN
-                            -- Wait for 2 full baud periods of continuous HIGH to ensure 
+                            -- Wait for 1.5 full baud periods of continuous HIGH to ensure 
                             -- the sync byte 0x55 is completely finished so that we don't read a garbage payload
-                            IF timer_v >= (baud_period * 2) THEN
+                            IF timer_v >= (baud_period + (baud_period / 2)) THEN
                                 timer_v := 0;
                                 state_v := IDLE;
                             ELSE

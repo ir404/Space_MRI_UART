@@ -1,12 +1,14 @@
 ----------------------------------------------------------------------------------
 -- Module Name:     uart_tx
 -- Author:          Imran
--- Last Modified:   11 August 2026
+-- Last Modified:   1 September 2026
 --
 -- Description: A customisable UART transmitter module. It takes parallel data 
 --              and transmits it serially based on a configurable baud rate and 
---              system clock frequency. The transmission frame format consists of:
---              1 Start bit ('0') + Data bits + 1 Stop bit ('1').
+--              system clock frequency. 
+--              Configuration: 8N2
+--              The transmission frame format consists of:
+--                  1 Start bit ('0') + Data bits + 2 Stop bits ('1').
 --
 -- Generics:
 --   CLK_FREQ   : System clock frequency in Hz.
@@ -45,7 +47,7 @@ END uart_tx;
 ARCHITECTURE behavioural OF uart_tx IS
 
     CONSTANT BAUD_PERIOD    : INTEGER   := CLK_FREQ / BAUD_RATE;
-    CONSTANT PACKET_WIDTH   : INTEGER   := DATA_WIDTH + 2;      -- Start(1) + Data + Stop(1)
+    CONSTANT PACKET_WIDTH   : INTEGER   := DATA_WIDTH + 3;      -- Start(1) + Data + Stop(2)
     CONSTANT START_BIT      : STD_LOGIC := '0';
     CONSTANT STOP_BIT       : STD_LOGIC := '1';
     
@@ -83,8 +85,8 @@ BEGIN
                     bit_ix_v := 0;
                     
                     IF tx_en = '1' THEN 
-                        -- Assemble full frame: [Stop, Data, Start]
-                        packet_s <= STOP_BIT & data & START_BIT; 
+                        -- Assemble full frame: [Stop, Stop, Data, Start]
+                        packet_s <= STOP_BIT & STOP_BIT & data & START_BIT; 
                         state_v  := LOAD_BIT;
                     END IF;
 

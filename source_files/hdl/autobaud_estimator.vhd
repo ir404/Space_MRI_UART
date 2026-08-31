@@ -4,6 +4,7 @@
 -- Description  : Minimum-pulse auto-baud estimator for UART. 
 --                Listens for the shortest incoming pulse to calculate the baud
 --                period and drops the lock if a framing error is detected.
+--                Requires the sync byte 0b01010101 for initialisation.
 --------------------------------------------------------------------------------
 
 LIBRARY IEEE;
@@ -73,7 +74,7 @@ BEGIN
                 state_v     := IDLE;
             ELSE
                 CASE state_v IS
-                    WHEN IDLE =>                                                -- Wait for a sync byte (eg. 0b01010101)
+                    WHEN IDLE =>                                                -- Wait for the sync byte 0b01010101
                         -- On falling edge, start timing the pulse 
                         IF rx_prev_s = RX_HIGH AND rx_sync2_s = RX_LOW THEN
                             state_v := MEASURING;

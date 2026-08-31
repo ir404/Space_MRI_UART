@@ -19,7 +19,7 @@ ENTITY uart_rx IS
         rst_n       : IN STD_LOGIC;
         uart_rx_bit : IN STD_LOGIC;
         baud_period : IN INTEGER;       -- Dynamic baud calculated from the estimator 
-        baud_locked : IN STD_LOGIC;     -- Gates the IDLE state to ignore sync byte (eg. 0b01010101)
+        baud_locked : IN STD_LOGIC;     -- Gates the receiver to ignore the sync byte - 0x55 or 0b01010101
         data        : OUT STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
         data_valid  : OUT STD_LOGIC;
         frame_err   : OUT STD_LOGIC
@@ -31,9 +31,9 @@ ARCHITECTURE behavioural OF uart_rx IS
     CONSTANT START_BIT : STD_LOGIC := '0';
     CONSTANT STOP_BIT  : STD_LOGIC := '1';
 
-    TYPE state_type IS (IDLE, START_SYNC, READ_DATA, CHECK_STOP);
+    TYPE state_type IS (WAIT_BUS_IDLE, IDLE, START_SYNC, READ_DATA, CHECK_STOP);
 
-    SIGNAL state_s        : state_type := IDLE;
+    SIGNAL state_s        : state_type := WAIT_BUS_IDLE;
     SIGNAL timer_s        : INTEGER := 0;
     SIGNAL bit_ix_s       : INTEGER RANGE 0 TO DATA_WIDTH - 1 := 0;
     SIGNAL data_reg_s     : STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0) := (OTHERS => '0');
@@ -55,7 +55,7 @@ BEGIN
         VARIABLE data_valid_v : STD_LOGIC;
     BEGIN
         IF rst_n = '0' THEN 
-            state_s       <= IDLE;
+            state_s       <= WAIT_BUS_IDLE;
             timer_s       <= 0;
             bit_ix_s      <= 0;
             data_reg_s    <= (OTHERS => '0');
@@ -79,10 +79,31 @@ BEGIN
             data_valid_v := '0'; 
 
             CASE state_v IS 
+                WHEN WAIT_BUS_IDLE =>
+                    -- Wait until estimator is locked AND the bus has returned to a HIGH state
+                    IF baud_locked = '1' THEN
+                        IF rx_sync2_s = STOP_BIT THEN
+                            -- Wait for 2 full baud periods of continuous HIGH to ensure 
+                            -- the sync byte 0x55 is completely finished so that we don't read a garbage payload
+                            IF timer_v >= (baud_period * 2) THEN
+                                timer_v := 0;
+                                state_v := IDLE;
+                            ELSE
+                                timer_v := timer_v + 1;
+                            END IF;
+                        ELSE
+                            timer_v := 0;
+                        END IF;
+                    ELSE
+                        timer_v := 0;
+                    END IF;
+
                 WHEN IDLE =>
                     timer_v := 0;
-                    -- Leave IDLE only when there's a falling edge and the estimator has locked onto a valid baud period
-                    IF rx_prev_s = STOP_BIT AND rx_sync2_s = START_BIT AND baud_locked = '1' THEN  
+                    
+                    IF baud_locked = '0' THEN                                       -- Drop back to waiting if the estimator loses lock
+                        state_v := WAIT_BUS_IDLE;
+                    ELSIF rx_prev_s = STOP_BIT AND rx_sync2_s = START_BIT THEN      -- Leave IDLE only when there's a falling edge
                         state_v := START_SYNC;
                     END IF;
 

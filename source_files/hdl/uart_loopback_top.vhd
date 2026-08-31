@@ -18,10 +18,10 @@ ENTITY uart_loopback_top IS
     );
     PORT (
         clk        : IN STD_LOGIC;
-        rst_n      : IN STD_LOGIC;          -- Map to a physical button
+        rst_n      : IN STD_LOGIC;          -- Map to a physical button (SW-0)
         RsRx       : IN STD_LOGIC;          -- USB-UART Rx pin (from PC)
         RsTx       : OUT STD_LOGIC;         -- USB-UART Tx pin (to PC)
-        locked_led : OUT STD_LOGIC          -- LED to indicate successful baud lock
+        locked_led : OUT STD_LOGIC          -- LED to indicate successful baud lock (LED-0)
     );
 END uart_loopback_top;
 

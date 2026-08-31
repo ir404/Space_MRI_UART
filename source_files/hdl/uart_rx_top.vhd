@@ -1,12 +1,25 @@
---------------------------------------------------------------------------------
--- File Name    : uart_rx_top.vhd
--- Author       : Imran
--- Description  : Top-level structural wrapper for the UART Receiver system.
---                Wires the Autobaud Estimator directly to the Standard Receiver,
---                including the self-healing error feedback loop.
+----------------------------------------------------------------------------------
+-- Module Name:     uart_rx_top
+-- Author:          Imran
+-- Last Modified:   1 September 2026
 --
--- Parameters   : DATA_WIDTH - Payload width in bits (default: 8)
---------------------------------------------------------------------------------
+-- Description: A top-level structural wrapper for the UART receiver subsystem. 
+--              It connects the autobaud estimator directly to the standard 
+--              receiver module. It routes the internal feedback loop required 
+--              to force a system recalibration if a framing error occurs.
+--
+-- Generics:
+--   DATA_WIDTH  : Width of the received data payload in bits (usually 8 bits).
+--
+-- Ports:
+--   clk         : System clock input.
+--   rst_n       : Asynchronous active-low reset.
+--   uart_rx_bit : Serial data input line.
+--   data        : Parallel data payload received.
+--   data_valid  : Valid flag; HIGH when a full, error-free frame is received.
+--   frame_err   : Error flag; HIGH if the expected stop bit is missing.
+--   baud_locked : Lock flag; HIGH when the estimator has found a valid baud rate.
+----------------------------------------------------------------------------------
 
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
